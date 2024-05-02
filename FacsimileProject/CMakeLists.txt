@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.9)
 
-project(ProjectName LANGUAGES CXX C VERSION 1.0.0)
+project(DFN LANGUAGES CXX C VERSION 1.0.0)
+
+set(${CMAKE_PROJECT_NAME}_A a b)
+message(${${CMAKE_PROJECT_NAME}_A})
+message(${CMAKE_CURRENT_BINARY_DIR})
+
 
 # Set C++ Standard
 ################################################################################
@@ -22,29 +27,60 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};${CMAKE_CURRENT_SOURCE_DIR}/../extern
 
 ## Eigen3
 find_package(Eigen3 CONFIG REQUIRED)
-list(APPEND ProjectName_LINKED_LIBRARIES PUBLIC Eigen3::Eigen)
+list(APPEND ${CMAKE_PROJECT_NAME}_LINKED_LIBRARIES PUBLIC Eigen3::Eigen)
 
 ## Threads
 find_package(Threads REQUIRED)
-list(APPEND ProjectName_LINKED_LIBRARIES PRIVATE Threads::Threads)
+list(APPEND ${CMAKE_PROJECT_NAME}_LINKED_LIBRARIES PRIVATE Threads::Threads)
 
 ## GTest
 find_package(GTest REQUIRED)
 
-list(APPEND ProjectName_LINKED_LIBRARIES PRIVATE GTest::gtest)
-list(APPEND ProjectName_LINKED_LIBRARIES PRIVATE GTest::gtest_main)
-list(APPEND ProjectName_LINKED_LIBRARIES PRIVATE GTest::gmock)
-list(APPEND ProjectName_LINKED_LIBRARIES PRIVATE GTest::gmock_main)
+list(APPEND ${CMAKE_PROJECT_NAME}_LINKED_LIBRARIES PRIVATE GTest::gtest)
+list(APPEND ${CMAKE_PROJECT_NAME}_LINKED_LIBRARIES PRIVATE GTest::gtest_main)
+list(APPEND ${CMAKE_PROJECT_NAME}_LINKED_LIBRARIES PRIVATE GTest::gmock)
+list(APPEND ${CMAKE_PROJECT_NAME}_LINKED_LIBRARIES PRIVATE GTest::gmock_main)
 
 # Copy file
 ###############################################################################
 
 # Insert Sources
 ################################################################################
+add_subdirectory(src)
 
+list(APPEND ${CMAKE_PROJECT_NAME}_sources ${src_sources})
+list(APPEND ${CMAKE_PROJECT_NAME}_headers ${src_headers})
+list(APPEND ${CMAKE_PROJECT_NAME}_includes ${src_includes})
+
+add_subdirectory(src_test)
+
+list(APPEND ${CMAKE_PROJECT_NAME}_TEST_sources ${src_test_sources})
+list(APPEND ${CMAKE_PROJECT_NAME}_TEST_headers ${src_test_headers})
+list(APPEND ${CMAKE_PROJECT_NAME}_TEST_includes ${src_test_includes})
+
+add_subdirectory(TestingParaview/Code/src)
+
+list(APPEND ${CMAKE_PROJECT_NAME}_sources ${src_paraview_sources})
+list(APPEND ${CMAKE_PROJECT_NAME}_headers ${src_paraview_headers})
+list(APPEND ${CMAKE_PROJECT_NAME}_includes ${src_paraview_includes})
 
 # Create executable
 ################################################################################
 
+add_executable(${CMAKE_PROJECT_NAME} main.cpp
+    ${${CMAKE_PROJECT_NAME}_sources}
+    ${${CMAKE_PROJECT_NAME}_headers})
 
-#target_compile_options(${PROJECT_NAME} PUBLIC -fPIC)
+target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC ${${CMAKE_PROJECT_NAME}_LINKED_LIBRARIES})
+target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${${CMAKE_PROJECT_NAME}_includes})
+target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC -fPIC)
+
+add_executable(${CMAKE_PROJECT_NAME}_TEST main_test.cpp
+    ${${CMAKE_PROJECT_NAME}_TEST_sources}
+    ${${CMAKE_PROJECT_NAME}_TEST_headers}
+    ${${CMAKE_PROJECT_NAME}_headers})
+
+target_link_libraries(${CMAKE_PROJECT_NAME}_TEST PUBLIC ${${CMAKE_PROJECT_NAME}_LINKED_LIBRARIES})
+target_include_directories(${CMAKE_PROJECT_NAME}_TEST PUBLIC ${${CMAKE_PROJECT_NAME}_includes})
+target_compile_options(${CMAKE_PROJECT_NAME}_TEST PUBLIC -fPIC)
+
